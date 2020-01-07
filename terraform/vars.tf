@@ -1,0 +1,24 @@
+variable "ami" {
+  type = "map"
+
+  default = {
+    "eu-central-1" = "ami-0cc0a36f626a4fdf5"
+  }
+}
+
+variable "instance_count" {
+  default = "3"
+}
+
+variable "instance_tags" {
+  type = "list"
+  default = ["prod", "test", "dev"]
+}
+
+variable "instance_type" {
+  default = "t2.micro"
+}
+
+variable "aws_region" {
+  default = "eu-central-1"
+}
