@@ -13,9 +13,14 @@ sudo add-apt-repository \
    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
    bionic \
    stable"
-sudo apt-get update
-sudo apt-get install -yy docker-ce docker-ce-cli containerd.io
+sudo apt update
+sudo apt install -yy docker-ce docker-ce-cli containerd.io
 sudo groupadd docker
 sudo usermod -aG docker $USER
 
-sudo apt install -yy docker-compose
+# sudo apt install -yy docker-compose
+
+# pulling and starting the docker container
+sudo systemctl start docker
+sudo docker pull akijakya/docker-single-test:latest
+sudo docker run -d -p 3000:3000 akijakya/docker-single-test:latest
