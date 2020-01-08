@@ -7,12 +7,17 @@ variable "ami" {
 }
 
 variable "instance_count" {
-  default = "3"
+  default = "2"
 }
 
 variable "instance_tags" {
   type = "list"
-  default = ["prod", "test", "dev"]
+  default = ["akijakya-test", "akijakya-dev"]
+}
+
+variable "instance_scripts" {
+  type = "list"
+  default = ["../greeter-github.sh", "../greeter-dockerhub.sh"]
 }
 
 variable "instance_type" {
