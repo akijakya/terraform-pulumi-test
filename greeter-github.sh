@@ -6,12 +6,11 @@ sudo apt install -yy git
 git config --global user.email "jakyandras@gmail.com"
 git config --global user.name "akijakya"
 
-# install node.js
+# install Node
 sudo apt install -yy npm
 
 # cloning repo
-cd ~
-mkdir greeter
+mkdir ~/greeter
 cd greeter
 git clone https://github.com/akijakya/docker-jenkins-test.git
 cd docker-jenkins-test
