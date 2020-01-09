@@ -1,8 +1,8 @@
 #! /bin/bash
-apt update
+sudo apt update
 
 # Installing Node
-apt install -yy npm
+sudo apt install -yy npm
 
 # Starting application
 cd ~/hello-world

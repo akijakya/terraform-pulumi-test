@@ -1,11 +1,11 @@
 #! /bin/bash
-apt update
+sudo apt update
 
 # install git
-apt install -yy git
+sudo apt install -yy git
 
 # install Node
-apt install -yy npm
+sudo apt install -yy npm
 
 # cloning repo
 cd ~
