@@ -16,11 +16,56 @@ resource "aws_key_pair" "terraform-test" {
   public_key = file("~/Creds/terraform-test.pub")
 }
 
+# Create a new load balancer
+resource "aws_elb" "elb" {
+  name               = "greeter-terraform-elb"
+  availability_zones = ["eu-central-1"]
+
+  # access_logs {
+  #   bucket        = "foo"
+  #   bucket_prefix = "bar"
+  #   interval      = 60
+  # }
+
+  listener {
+    instance_port     = 3000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  listener {
+    instance_port      = 3000
+    instance_protocol  = "http"
+    lb_port            = 443
+    lb_protocol        = "https"
+    # ssl_certificate_id = "arn:aws:iam::123456789012:server-certificate/certName"
+  }
+
+  # health_check {
+  #   healthy_threshold   = 2
+  #   unhealthy_threshold = 2
+  #   timeout             = 3
+  #   target              = "HTTP:3000/"
+  #   interval            = 30
+  # }
+
+  instances                   = [aws_instance.prod.id, aws_instance.dev[0].id]
+  cross_zone_load_balancing   = true
+  idle_timeout                = 400
+  connection_draining         = true
+  connection_draining_timeout = 400
+
+  tags = {
+    Name = "greeter-terraform-elb"
+  }
+}
+
 # Create 1 new AWS Instance. 
 # For our EC2 instances, we specify an AMI for Ubuntu 
 # (For eu-central-1 region: Ubuntu Server 18.04 LTS (HVM), SSD Volume Type - ami-0cc0a36f626a4fdf5 (64-bit x86) / ami-0f71209b1289bf95c (64-bit Arm))
 # , and request a "t2.micro" instance so we qualify under the free tier.
-resource "aws_instance" "production" {
+resource "aws_instance" "prod" {
   ami           = "ami-0cc0a36f626a4fdf5"
   instance_type = "t2.micro"
   key_name      = aws_key_pair.terraform-test.key_name
@@ -42,7 +87,7 @@ resource "aws_instance" "production" {
 }
 
 # Create 2 another AWS instance but now with the usage of our vars.tf file and looping
-resource "aws_instance" "my-instance" {
+resource "aws_instance" "dev" {
   count         = var.instance_count
   ami           = lookup(var.ami,var.aws_region)
   instance_type = var.instance_type
