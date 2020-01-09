@@ -23,4 +23,4 @@ sudo usermod -aG docker $USER
 # pulling and starting the docker container
 sudo systemctl start docker
 sudo docker pull akijakya/docker-single-test:latest
-sudo docker run -d -p 3000:3000 akijakya/docker-single-test:latest
+sudo docker run -d -p 80:3000 akijakya/docker-single-test:latest

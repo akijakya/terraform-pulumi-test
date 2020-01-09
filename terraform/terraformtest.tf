@@ -53,3 +53,4 @@ resource "aws_instance" "my-instance" {
     Name  = "${element(var.instance_tags, count.index)}"  # element syntax: element(list, index)
   }
 }
+
