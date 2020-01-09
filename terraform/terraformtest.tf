@@ -49,12 +49,12 @@ resource "aws_security_group" "akijakya-greeter" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # egress {
-  #   from_port = 0
-  #   to_port = 0
-  #   protocol = "-1"
-  #   cidr_blocks = ["0.0.0.0/0"]
-  # }
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 # Create 1 new AWS Instance. 
