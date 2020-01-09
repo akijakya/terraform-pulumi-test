@@ -69,7 +69,7 @@ resource "aws_instance" "prod" {
   # Copies the local hello-world folder to ~/hello-world
   provisioner "file" {
     source      = "../hello-world"
-    destination = "~/hello-world"
+    destination = "~"
   }
 
   # Runs the commands to start server
