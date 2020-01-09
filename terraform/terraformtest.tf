@@ -13,7 +13,7 @@ provider "aws" {
 # The pub file needed to be created in the desired directory first in the terminal with $ ssh-keygen -o
 resource "aws_key_pair" "terraform-test" {
   key_name   = "terraform-test"
-  public_key = "${file("~/Creds/terraform-test.pub")}"
+  public_key = file("~/Creds/terraform-test.pub")
 }
 
 # Create 1 new AWS Instance. 
@@ -23,7 +23,7 @@ resource "aws_key_pair" "terraform-test" {
 resource "aws_instance" "production" {
   ami           = "ami-0cc0a36f626a4fdf5"
   instance_type = "t2.micro"
-  key_name      = "${aws_key_pair.terraform-test.key_name}"
+  key_name      = aws_key_pair.terraform-test.key_name
 
   # Copies the local hello-world folder to ~/hello-world
   provisioner "file" {
@@ -43,14 +43,13 @@ resource "aws_instance" "production" {
 
 # Create 2 another AWS instance but now with the usage of our vars.tf file and looping
 resource "aws_instance" "my-instance" {
-  count         = "${var.instance_count}"
-  ami           = "${lookup(var.ami,var.aws_region)}"
-  instance_type = "${var.instance_type}"
-  key_name      = "${aws_key_pair.terraform-test.key_name}"
-  user_data     = "${file("${element(var.instance_scripts, count.index)}")}"  # The user_data only runs at instance launch time.
+  count         = var.instance_count
+  ami           = lookup(var.ami,var.aws_region)
+  instance_type = var.instance_type
+  key_name      = aws_key_pair.terraform-test.key_name
+  user_data     = file(element(var.instance_scripts, count.index))  # The user_data only runs at instance launch time.
 
   tags = {
-    Name  = "${element(var.instance_tags, count.index)}"  # element syntax: element(list, index)
+    Name  = element(var.instance_tags, count.index)  # element syntax: element(list, index)
   }
 }
-
