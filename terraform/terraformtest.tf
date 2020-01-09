@@ -16,6 +16,93 @@ resource "aws_key_pair" "terraform-test" {
   public_key = file("~/Creds/terraform-test.pub")
 }
 
+# Creating security group with specified ports to open
+resource "aws_security_group" "akijakya-greeter" {
+  name        = "akijakya-greeter"
+  description = "Sec group for akijakyas greeter terrafrom magic"
+  
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # ingress {
+  #   from_port   = 3000
+  #   to_port     = 3000
+  #   protocol    = "tcp"
+  #   cidr_blocks = ["0.0.0.0/0"]
+  # }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # egress {
+  #   from_port = 0
+  #   to_port = 0
+  #   protocol = "-1"
+  #   cidr_blocks = ["0.0.0.0/0"]
+  # }
+}
+
+# Create 1 new AWS Instance. 
+# For our EC2 instances, we specify an AMI for Ubuntu 
+# (For eu-central-1 region: Ubuntu Server 18.04 LTS (HVM), SSD Volume Type - ami-0cc0a36f626a4fdf5 (64-bit x86) / ami-0f71209b1289bf95c (64-bit Arm))
+# , and request a "t2.micro" instance so we qualify under the free tier.
+resource "aws_instance" "prod" {
+  ami           = "ami-0cc0a36f626a4fdf5"
+  instance_type = "t2.micro"
+  key_name      = aws_key_pair.terraform-test.key_name
+
+  # Copies the local hello-world folder to ~/hello-world
+  provisioner "file" {
+    source      = "../hello-world"
+    destination = "~/hello-world"
+  }
+
+  # Runs the commands to start server
+  provisioner "remote-exec" {
+  script = "../greeter.sh"
+}
+
+  security_groups = [
+    aws_security_group.akijakya-greeter.name
+  ]
+
+  tags = {
+    Name = "akijakya-prod"
+  }
+}
+
+# Create 2 another AWS instance but now with the usage of our vars.tf file and looping
+resource "aws_instance" "dev" {
+  count         = var.instance_count
+  ami           = lookup(var.ami,var.aws_region)
+  instance_type = var.instance_type
+  key_name      = aws_key_pair.terraform-test.key_name
+  user_data     = file(element(var.instance_scripts, count.index))  # The user_data only runs at instance launch time.
+
+  security_groups = [
+    aws_security_group.akijakya-greeter.name
+  ]
+
+  tags = {
+    Name  = element(var.instance_tags, count.index)  # element syntax: element(list, index)
+  }
+}
+
 # Create a new load balancer
 resource "aws_elb" "elb" {
   name               = "greeter-terraform-elb"
@@ -58,43 +145,5 @@ resource "aws_elb" "elb" {
 
   tags = {
     Name = "greeter-terraform-elb"
-  }
-}
-
-# Create 1 new AWS Instance. 
-# For our EC2 instances, we specify an AMI for Ubuntu 
-# (For eu-central-1 region: Ubuntu Server 18.04 LTS (HVM), SSD Volume Type - ami-0cc0a36f626a4fdf5 (64-bit x86) / ami-0f71209b1289bf95c (64-bit Arm))
-# , and request a "t2.micro" instance so we qualify under the free tier.
-resource "aws_instance" "prod" {
-  ami           = "ami-0cc0a36f626a4fdf5"
-  instance_type = "t2.micro"
-  key_name      = aws_key_pair.terraform-test.key_name
-
-  # Copies the local hello-world folder to ~/hello-world
-  provisioner "file" {
-    source      = "../hello-world"
-    destination = "~/hello-world"
-  }
-
-  # Runs 
-  provisioner "remote-exec" {
-  script = "../greeter.sh"
-}
-
-  tags = {
-    Name = "akijakya-prod"
-  }
-}
-
-# Create 2 another AWS instance but now with the usage of our vars.tf file and looping
-resource "aws_instance" "dev" {
-  count         = var.instance_count
-  ami           = lookup(var.ami,var.aws_region)
-  instance_type = var.instance_type
-  key_name      = aws_key_pair.terraform-test.key_name
-  user_data     = file(element(var.instance_scripts, count.index))  # The user_data only runs at instance launch time.
-
-  tags = {
-    Name  = element(var.instance_tags, count.index)  # element syntax: element(list, index)
   }
 }
