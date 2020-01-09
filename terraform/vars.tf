@@ -1,5 +1,5 @@
 variable "ami" {
-  type = "map"
+  type = map(string)
 
   default = {
     "eu-central-1" = "ami-0cc0a36f626a4fdf5"
@@ -11,12 +11,12 @@ variable "instance_count" {
 }
 
 variable "instance_tags" {
-  type = "list"
+  type = list(string)
   default = ["akijakya-test", "akijakya-dev"]
 }
 
 variable "instance_scripts" {
-  type = "list"
+  type = list(string)
   default = ["../greeter-github.sh", "../greeter-dockerhub.sh"]
 }
 
