@@ -1,5 +1,4 @@
 #! /bin/bash
-sudo apt update
 
 # install git
 sudo apt install -yy git

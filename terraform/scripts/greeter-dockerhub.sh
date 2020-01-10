@@ -1,5 +1,4 @@
 #! /bin/bash
-sudo apt update
 
 # installing Docker
 sudo apt-get install -yy \
