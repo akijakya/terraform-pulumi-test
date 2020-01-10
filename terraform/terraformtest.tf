@@ -28,12 +28,12 @@ resource "aws_security_group" "akijakya-greeter" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # ingress {
-  #   from_port   = 3000
-  #   to_port     = 3000
-  #   protocol    = "tcp"
-  #   cidr_blocks = ["0.0.0.0/0"]
-  # }
+  ingress {
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   ingress {
     from_port   = 80
@@ -66,16 +66,28 @@ resource "aws_instance" "prod" {
   instance_type = "t2.micro"
   key_name      = aws_key_pair.terraform-test.key_name
 
-  # Copies the local hello-world folder to ~/hello-world
+  # Copies the local hello-world folder to ~
   provisioner "file" {
     source      = "../hello-world"
     destination = "~"
+    connection {
+      type = "ssh"
+      host = self.public_ip
+      user = "ubuntu"
+      private_key = file("~/Creds/terraform-test")
+    }
   }
 
   # Runs the commands to start server
   provisioner "remote-exec" {
-  script = "../greeter.sh"
-}
+    script = "scripts/greeter.sh"
+    connection {
+      type = "ssh"
+      host = self.public_ip
+      user = "ubuntu"
+      private_key = file("~/Creds/terraform-test")
+    }
+  }
 
   security_groups = [
     aws_security_group.akijakya-greeter.name
@@ -103,47 +115,47 @@ resource "aws_instance" "dev" {
   }
 }
 
-# Create a new load balancer
-resource "aws_elb" "elb" {
-  name               = "greeter-terraform-elb"
-  availability_zones = ["eu-central-1"]
+# # Create a new load balancer
+# resource "aws_elb" "elb" {
+#   name               = "greeter-terraform-elb"
+#   availability_zones = ["eu-central-1"]
 
-  # access_logs {
-  #   bucket        = "foo"
-  #   bucket_prefix = "bar"
-  #   interval      = 60
-  # }
+#   # access_logs {
+#   #   bucket        = "foo"
+#   #   bucket_prefix = "bar"
+#   #   interval      = 60
+#   # }
 
-  listener {
-    instance_port     = 3000
-    instance_protocol = "http"
-    lb_port           = 80
-    lb_protocol       = "http"
-  }
+#   listener {
+#     instance_port     = 3000
+#     instance_protocol = "http"
+#     lb_port           = 80
+#     lb_protocol       = "http"
+#   }
 
-  listener {
-    instance_port      = 3000
-    instance_protocol  = "http"
-    lb_port            = 443
-    lb_protocol        = "https"
-    # ssl_certificate_id = "arn:aws:iam::123456789012:server-certificate/certName"
-  }
+#   listener {
+#     instance_port      = 3000
+#     instance_protocol  = "http"
+#     lb_port            = 443
+#     lb_protocol        = "https"
+#     # ssl_certificate_id = "arn:aws:iam::123456789012:server-certificate/certName"
+#   }
 
-  # health_check {
-  #   healthy_threshold   = 2
-  #   unhealthy_threshold = 2
-  #   timeout             = 3
-  #   target              = "HTTP:3000/"
-  #   interval            = 30
-  # }
+#   # health_check {
+#   #   healthy_threshold   = 2
+#   #   unhealthy_threshold = 2
+#   #   timeout             = 3
+#   #   target              = "HTTP:3000/"
+#   #   interval            = 30
+#   # }
 
-  instances                   = [aws_instance.prod.id, aws_instance.dev[0].id]
-  cross_zone_load_balancing   = true
-  idle_timeout                = 400
-  connection_draining         = true
-  connection_draining_timeout = 400
+#   instances                   = [aws_instance.prod.id, aws_instance.dev[0].id]
+#   cross_zone_load_balancing   = true
+#   idle_timeout                = 400
+#   connection_draining         = true
+#   connection_draining_timeout = 400
 
-  tags = {
-    Name = "greeter-terraform-elb"
-  }
-}
+#   tags = {
+#     Name = "greeter-terraform-elb"
+#   }
+# }

@@ -17,7 +17,7 @@ variable "instance_tags" {
 
 variable "instance_scripts" {
   type = list(string)
-  default = ["../greeter-github.sh", "../greeter-dockerhub.sh"]
+  default = ["scripts/greeter-github.sh", "scripts/greeter-dockerhub.sh"]
 }
 
 variable "instance_type" {
