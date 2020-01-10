@@ -17,6 +17,7 @@ let ami = aws.getAmi({
 let group = new aws.ec2.SecurityGroup("webserver-secgrp", {
     ingress: [
         { protocol: "tcp", fromPort: 22, toPort: 22, cidrBlocks: ["0.0.0.0/0"] },
+        { protocol: "tcp", fromPort: 80, toPort: 80, cidrBlocks: ["0.0.0.0/0"] },
     ],
 });
 
