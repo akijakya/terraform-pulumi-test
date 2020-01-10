@@ -14,10 +14,13 @@ let ami = aws.getAmi({
     mostRecent: true,
 });
 
-let group = new aws.ec2.SecurityGroup("webserver-secgrp", {
+let group = new aws.ec2.SecurityGroup("akijakya-pulumi-test", {
     ingress: [
         { protocol: "tcp", fromPort: 22, toPort: 22, cidrBlocks: ["0.0.0.0/0"] },
         { protocol: "tcp", fromPort: 80, toPort: 80, cidrBlocks: ["0.0.0.0/0"] },
+    ],
+    egress: [
+        { protocol: "-1", fromPort: 0, toPort: 0, cidrBlocks: ["0.0.0.0/0"] },
     ],
 });
 
@@ -46,13 +49,42 @@ sudo systemctl start docker
 sudo docker pull akijakya/docker-single-test:latest
 sudo docker run -d -p 80:3000 akijakya/docker-single-test:latest`;
 
-let server = new aws.ec2.Instance("webserver-www", {
-    instanceType: size,
-    securityGroups: [ group.name ], // reference the security group resource above
-    ami: ami.id,
-    userData = userData,
-});
+let serverNames = ["dev", "test", "prod"];
+let serverArray = [];
 
-exports.publicIp = server.publicIp;
-exports.publicHostName = server.publicDns;
+serverNames.forEach((e) => {
+    serverArray.push (
+        new aws.ec2.Instance("akijakya-" + e, {
+            instanceType: size,
+            securityGroups: [ group.name ], // reference the security group resource above
+            ami: ami.id,
+            userData: userData,
+            tags: {
+                ["Name"]: `akijakya-${e}`,
+            },
+        })
+    )
+})
+
+// for (let i = 0; i < serverNames.length; ++i) {
+//     serverArray[i] = new aws.ec2.Instance(serverNames[i], {
+//         instanceType: size,
+//         securityGroups: [ group.name ], // reference the security group resource above
+//         ami: ami.id,
+//         userData: userData,
+//     });
+// }
+
+// let server = new aws.ec2.Instance("webserver-www", {
+//     instanceType: size,
+//     securityGroups: [ group.name ], // reference the security group resource above
+//     ami: ami.id,
+//     userData = userData,
+// });
+
+// Writing data out
+exports.publicIp = serverArray.map(e => e.publicIp);
+exports.publicHostName = serverArray.map(e => e.publicDns);
+// exports.publicIp = server.publicpublicIpIp;
+// exports.publicHostName = server.publicDns;
 exports.amiName = ami.id;
