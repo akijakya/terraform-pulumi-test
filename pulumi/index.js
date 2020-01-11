@@ -1,6 +1,7 @@
 "use strict";
 
 const aws = require("@pulumi/aws");
+const fs = require('fs');
 
 let size = "t2.micro";     // t2.micro is available in the AWS free tier
 let ami = aws.getAmi({
@@ -24,30 +25,34 @@ let group = new aws.ec2.SecurityGroup("akijakya-pulumi-test", {
     ],
 });
 
-let userData = 
-`#! /bin/bash
+const deployer = new aws.ec2.KeyPair("deployer", {
+    publicKey: fs.readFileSync('../../../Creds/pulumi_key.pub', 'utf8'),
+});
 
-# installing Docker
-sudo apt-get install -yy \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    gnupg-agent \
-    software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   bionic \
-   stable"
-sudo apt update
-sudo apt install -yy docker-ce docker-ce-cli containerd.io
-sudo groupadd docker
-sudo usermod -aG docker $USER
+let userData = fs.readFileSync('../terraform/scripts/greeter-dockerhub.sh', 'utf8');
+// `#! /bin/bash
 
-# pulling and starting the docker container
-sudo systemctl start docker
-sudo docker pull akijakya/docker-single-test:latest
-sudo docker run -d -p 80:3000 akijakya/docker-single-test:latest`;
+// # installing Docker
+// sudo apt-get install -yy \
+//     apt-transport-https \
+//     ca-certificates \
+//     curl \
+//     gnupg-agent \
+//     software-properties-common
+// curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+// sudo add-apt-repository \
+//    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+//    bionic \
+//    stable"
+// sudo apt update
+// sudo apt install -yy docker-ce docker-ce-cli containerd.io
+// sudo groupadd docker
+// sudo usermod -aG docker $USER
+
+// # pulling and starting the docker container
+// sudo systemctl start docker
+// sudo docker pull akijakya/docker-single-test:latest
+// sudo docker run -d -p 80:3000 akijakya/docker-single-test:latest`;
 
 let serverNames = ["dev", "test", "prod"];
 let serverArray = [];
@@ -59,12 +64,15 @@ serverNames.forEach((e) => {
             securityGroups: [ group.name ], // reference the security group resource above
             ami: ami.id,
             userData: userData,
+            keyName: deployer,
             tags: {
-                ["Name"]: `akijakya-${e}`,
+                Name: `akijakya-${e}`,
             },
         })
     )
 })
+
+// Creating servers with a for loop:
 
 // for (let i = 0; i < serverNames.length; ++i) {
 //     serverArray[i] = new aws.ec2.Instance(serverNames[i], {
@@ -75,6 +83,8 @@ serverNames.forEach((e) => {
 //     });
 // }
 
+// The original example code for one instance:
+
 // let server = new aws.ec2.Instance("webserver-www", {
 //     instanceType: size,
 //     securityGroups: [ group.name ], // reference the security group resource above
@@ -83,6 +93,7 @@ serverNames.forEach((e) => {
 // });
 
 // Writing data out
+
 exports.publicIp = serverArray.map(e => e.publicIp);
 exports.publicHostName = serverArray.map(e => e.publicDns);
 // exports.publicIp = server.publicpublicIpIp;
