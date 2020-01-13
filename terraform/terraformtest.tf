@@ -4,9 +4,9 @@
 # If the credentials are in a different directory, you can specify with shared_credentials_file, as well as a custom profile
 
 provider "aws" {
+  profile                 = "default"
   region                  = "eu-central-1"
   # shared_credentials_file = "/Users/tf_user/.aws/creds"
-  # profile                 = "customprofile"
 }
 
 # Connecting via ssh
